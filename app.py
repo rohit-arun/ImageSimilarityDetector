@@ -10,7 +10,6 @@ import os
 
 os.environ['DISPLAY'] = ':0'
 
-
 st.set_page_config(
     page_title="Image Similarity Detector",
     layout="wide",
