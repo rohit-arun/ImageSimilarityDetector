@@ -5,7 +5,6 @@ from skimage.metrics import mean_squared_error as mse
 import imutils
 from PIL import Image
 import numpy as np
-import pyautogui
 
 st.set_page_config(
     page_title="Image Similarity Detector",
@@ -43,79 +42,70 @@ img_number_list = ['First', 'Second']
 firstImageObject = uploadImage(img_number_list[0])
 secondImageObject = uploadImage(img_number_list[1])
 
-if 'button_clicked' not in st.session_state:
-    st.session_state.button_clicked = False
 
-def callback():
-    st.session_state.button_clicked = True
+if firstImageObject is None or secondImageObject is None:
+    pass
+else:
+    if firstImageObject[0].shape != secondImageObject[0].shape:
+            st.error('The input images have different dimensions.')
+            st.write('Would you like to resize one of the images corresponding to the other?')
+            col_resize1, col_resize2 = st.columns(2)
+            with col_resize1:
+                if st.button('Resize First Image'):
+                    (H1, W1, _) = secondImageObject[0].shape
+                    firstImageObject[0] = cv2.resize(firstImageObject[0], dsize = (W1, H1), interpolation=cv2.INTER_CUBIC)
+                    st.image(firstImageObject[0], caption=f'{firstImageObject[1]}_{W1}x{H1}')
+            with col_resize2:
+                if st.button('Resize Second Image'):
+                    (H2, W2, _) = firstImageObject[0].shape
+                    secondImageObject[0] = cv2.resize(secondImageObject[0], dsize = (W2, H2), interpolation=cv2.INTER_CUBIC)
+                    st.image(secondImageObject[0], caption=f'{secondImageObject[1]}_{W2}x{H2}')
+    else:
+        pass
 
-if st.button('Calculate', on_click=callback) or st.session_state.button_clicked:
-    if firstImageObject is None or secondImageObject is None:
+if firstImageObject is None or secondImageObject is None:
+    pass
+else:
+    if firstImageObject[0].shape != secondImageObject[0].shape:
         pass
     else:
-        if firstImageObject[0].shape != secondImageObject[0].shape:
-                st.error('The input images have different dimensions.')
-                st.write('Would you like to resize one of the images corresponding to the other?')
-                col_resize1, col_resize2 = st.columns(2)
-                with col_resize1:
-                    if st.button('Resize First Image'):
-                        (H1, W1, _) = secondImageObject[0].shape
-                        firstImageObject[0] = cv2.resize(firstImageObject[0], dsize = (W1, H1), interpolation=cv2.INTER_CUBIC)
-                        st.image(firstImageObject[0], caption=f'{firstImageObject[1]}_{W1}x{H1}')
-                with col_resize2:
-                    if st.button('Resize Second Image'):
-                        (H2, W2, _) = firstImageObject[0].shape
-                        secondImageObject[0] = cv2.resize(secondImageObject[0], dsize = (W2, H2), interpolation=cv2.INTER_CUBIC)
-                        st.image(secondImageObject[0], caption=f'{secondImageObject[1]}_{W2}x{H2}')
-        else:
-            pass
+        (score_ssim, diff) = img_ssim(firstImageObject[0], secondImageObject[0])
+        score_mse = img_mse(firstImageObject[0], secondImageObject[0])
 
-    if firstImageObject is None or secondImageObject is None:
-        pass
-    else:
-        if firstImageObject[0].shape != secondImageObject[0].shape:
-            pass
-        else:
-            (score_ssim, diff) = img_ssim(firstImageObject[0], secondImageObject[0])
-            score_mse = img_mse(firstImageObject[0], secondImageObject[0])
+        diff = (diff * 255).astype("uint8")
+        thresh = cv2.threshold(diff, 0, 255,
+        cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
 
-            diff = (diff * 255).astype("uint8")
-            thresh = cv2.threshold(diff, 0, 255,
-            cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+        cnts = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts = imutils.grab_contours(cnts)
+        for c in cnts:
+            (x, y, w, h) = cv2.boundingRect(c)
+            cv2.rectangle(firstImageObject[0], (x, y), (x + w, y + h), (255, 20, 0), 2)
+            cv2.rectangle(secondImageObject[0], (x, y), (x + w, y + h), (255, 20, 0), 2)
 
-            cnts = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            cnts = imutils.grab_contours(cnts)
-            for c in cnts:
-                (x, y, w, h) = cv2.boundingRect(c)
-                cv2.rectangle(firstImageObject[0], (x, y), (x + w, y + h), (255, 20, 0), 2)
-                cv2.rectangle(secondImageObject[0], (x, y), (x + w, y + h), (255, 20, 0), 2)
+        tab1, tab2 = st.tabs(['Differences', 'Similarity Score'])
 
-            tab1, tab2 = st.tabs(['Differences', 'Similarity Score'])
+        with tab1:
+            col1, col2 = st.columns(2)
+            with col1:
+                st.image(firstImageObject[0], caption=f'{firstImageObject[1]}')
+            with col2:        
+                st.image(secondImageObject[0], caption=f'{secondImageObject[1]}')
 
-            with tab1:
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.image(firstImageObject[0], caption=f'{firstImageObject[1]}')
-                with col2:        
-                    st.image(secondImageObject[0], caption=f'{secondImageObject[1]}')
+            col3, col4 = st.columns(2)
+            with col3:
+                st.image(diff, caption='Difference')
+            with col4:        
+                st.image(thresh, caption='Threshold')
 
-                col3, col4 = st.columns(2)
-                with col3:
-                    st.image(diff, caption='Difference')
-                with col4:        
-                    st.image(thresh, caption='Threshold')
-
-            with tab2:
-                col_ssim, col_mse = st.columns(2)
-                with col_ssim:
-                    score_ssim = round(score_ssim * 100, 2)
-                    st.metric(label='SSIM', value=f'{score_ssim} %')
-                with col_mse:
-                    score_mse = round(score_mse, 2)
-                    st.metric(label='MSE', value=f'{score_mse}')
-
-    if st.button('Reset'):
-        pyautogui.hotkey('ctrl', 'F5')
+        with tab2:
+            col_ssim, col_mse = st.columns(2)
+            with col_ssim:
+                score_ssim = round(score_ssim * 100, 2)
+                st.metric(label='SSIM', value=f'{score_ssim} %')
+            with col_mse:
+                score_mse = round(score_mse, 2)
+                st.metric(label='MSE', value=f'{score_mse}')
 
 with st.expander("What is SSIM?"):
     st.write("""
