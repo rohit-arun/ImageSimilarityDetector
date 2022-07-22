@@ -6,9 +6,6 @@ import imutils
 from PIL import Image
 import numpy as np
 import pyautogui
-import os
-
-os.environ['DISPLAY'] = ':0'
 
 st.set_page_config(
     page_title="Image Similarity Detector",
