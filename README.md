@@ -1,3 +1,3 @@
-# ImageSimilarityDetector
- A web-app built using Python and Streamlit to identify the structural similarities between two images.
- Deployed App: https://imgsmlrty.herokuapp.com/
+# Image Similarity Detector
+ A web-app built on Python and Streamlit to identify structural similarities between images.  
+ Deployed app: https://imgsmlrty.herokuapp.com/
