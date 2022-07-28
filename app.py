@@ -15,6 +15,7 @@ st.set_page_config(
 )
 
 st.title('Image Similarity Detector')
+st.info('Select two images having the same dimensions')
 
 def uploadImage(img_number):
     uploaded_file = st.file_uploader(f'Choose {img_number.lower()} image: ', type=(['png', 'jpeg', 'jpg']))
@@ -48,18 +49,7 @@ if firstImageObject is None or secondImageObject is None:
 else:
     if firstImageObject[0].shape != secondImageObject[0].shape:
             st.error('The input images have different dimensions.')
-            st.write('Would you like to resize one of the images corresponding to the other?')
-            col_resize1, col_resize2 = st.columns(2)
-            with col_resize1:
-                if st.button('Resize First Image'):
-                    (H1, W1, _) = secondImageObject[0].shape
-                    firstImageObject[0] = cv2.resize(firstImageObject[0], dsize = (W1, H1), interpolation=cv2.INTER_CUBIC)
-                    st.image(firstImageObject[0], caption=f'{firstImageObject[1]}_{W1}x{H1}')
-            with col_resize2:
-                if st.button('Resize Second Image'):
-                    (H2, W2, _) = firstImageObject[0].shape
-                    secondImageObject[0] = cv2.resize(secondImageObject[0], dsize = (W2, H2), interpolation=cv2.INTER_CUBIC)
-                    st.image(secondImageObject[0], caption=f'{secondImageObject[1]}_{W2}x{H2}')
+            st.write('To calculate the similarity scores, the two images must have the same dimensions.')
     else:
         pass
 
