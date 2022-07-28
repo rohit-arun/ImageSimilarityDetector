@@ -21,10 +21,14 @@ def uploadImage(img_number):
     else:
         file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
         img = cv2.cvtColor(cv2.imdecode(file_bytes, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB)
-        st.image(img, caption=f'{uploaded_file.name} - {img.shape[1]}x{img.shape[0]}')
+        if img.shape[0] >= 500:
+            st.image(imutils.resize(img, height=500), caption=f'{uploaded_file.name} - {img.shape[1]}x{img.shape[0]}')
+        else:
+            st.image(img, caption=f'{uploaded_file.name} - {img.shape[1]}x{img.shape[0]}')
         gray_resized_image = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-        st.success(f'{img_number} image uploaded')
         image_object = [gray_resized_image, img, uploaded_file.name]
+
+        st.success(f'{img_number} image uploaded')
         return image_object
     
 img_number_list = ['First', 'Second']
@@ -39,6 +43,13 @@ if st.button('Calculate'):
             st.error('The input images have different dimensions.')
             st.write('To calculate the similarity scores, the two images must have the same dimensions.')
         else:
+            if first_image_obj[0].shape[0] >= 500 and second_image_obj[0].shape[0] >= 500:
+                first_image_obj[0] = imutils.resize(first_image_obj[0], height=500)
+                first_image_obj[1] = imutils.resize(first_image_obj[1], height=500)
+                second_image_obj[0] = imutils.resize(second_image_obj[0], height=500)
+                second_image_obj[1] = imutils.resize(second_image_obj[1], height=500)
+            else:
+                pass
             (score_ssim, diff) = ssim(first_image_obj[0], second_image_obj[0], full=True)
             score_mse = mse(first_image_obj[0], second_image_obj[0])
 
@@ -60,9 +71,9 @@ if st.button('Calculate'):
             with tab1:
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.image(first_image_obj[1], caption=f'{first_image_obj[2]}')
+                    st.image(first_image_obj[1], caption=f'{first_image_obj[2]} - {first_image_obj[0].shape[1]}x{first_image_obj[0].shape[0]}')
                 with col2:        
-                    st.image(second_image_obj[1], caption=f'{second_image_obj[2]}')
+                    st.image(second_image_obj[1], caption=f'{second_image_obj[2]} - {second_image_obj[0].shape[1]}x{second_image_obj[0].shape[0]}')
 
                 col3, col4 = st.columns(2)
                 with col3:
