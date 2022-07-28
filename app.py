@@ -16,9 +16,7 @@ st.title('Image Similarity Detector')
 
 def uploadImage(img_number):
     uploaded_file = st.file_uploader(f'Choose {img_number.lower()} image: ', type=(['png', 'jpeg', 'jpg']))
-    if uploaded_file is None:
-        pass
-    else:
+    if uploaded_file is not None:
         file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
         img = cv2.cvtColor(cv2.imdecode(file_bytes, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB)
         if img.shape[0] >= 500:
@@ -27,7 +25,6 @@ def uploadImage(img_number):
             st.image(img, caption=f'{uploaded_file.name} - {img.shape[1]}x{img.shape[0]}')
         gray_resized_image = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         image_object = [gray_resized_image, img, uploaded_file.name]
-
         st.success(f'{img_number} image uploaded')
         return image_object
     
@@ -48,8 +45,7 @@ if st.button('Calculate'):
                 first_image_obj[1] = imutils.resize(first_image_obj[1], height=500)
                 second_image_obj[0] = imutils.resize(second_image_obj[0], height=500)
                 second_image_obj[1] = imutils.resize(second_image_obj[1], height=500)
-            else:
-                pass
+            
             (score_ssim, diff) = ssim(first_image_obj[0], second_image_obj[0], full=True)
             score_mse = mse(first_image_obj[0], second_image_obj[0])
 
@@ -60,11 +56,9 @@ if st.button('Calculate'):
             cnts = imutils.grab_contours(cnts)
             for c in cnts:
                 (x, y, w, h) = cv2.boundingRect(c)
-                if (cv2.contourArea(c)) > 50:
+                if (cv2.contourArea(c)) >= 50:
                     cv2.rectangle(first_image_obj[1], (x, y), (x + w, y + h), (0, 0, 255), 2)
                     cv2.rectangle(second_image_obj[1], (x, y), (x + w, y + h), (0, 0, 255), 2)
-                else:
-                    pass
 
             tab1, tab2 = st.tabs(['Differences', 'Similarity Score'])
 
@@ -97,5 +91,3 @@ if st.button('Calculate'):
                         st.write("""
                             Mean Sqaured Error (MSE) is calculated by taking the mean of the square of the difference between the two images, based on the differences in the intensities of corresponding pixels in both images. The larger the value of MSE, the greater is the difference between both images.
                         """)
-else:
-    pass
